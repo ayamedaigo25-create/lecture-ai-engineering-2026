@@ -77,3 +77,33 @@ def get_lecture_summary(lecture: int) -> str:
         available = sorted(p.stem for p in (DATA_DIR / "lectures").glob("*.md"))
         return f"第{lecture}回の要点はまだありません。用意されている回: {', '.join(available)}"
     return path.read_text(encoding="utf-8")
+
+def make_quiz(lecture: int) -> str:
+    """指定した回の内容に基づく、簡単なクイズを作る。
+
+    返すのは、問題文と答えのペアのリスト。モデルが自分で作った問題と答えを返す。
+    例: [{"question": "LoRAとは何か？", "answer": "低ランク適応の手法である。"}, ...]
+    """
+    # 実際にはモデルにクイズを作らせるが、ここではダミーを返す
+    return json.dumps([
+        {"question": f"第{lecture}回の内容に関する問題1", "answer": f"第{lecture}回の答え1"},
+        {"question": f"第{lecture}回の内容に関する問題2", "answer": f"第{lecture}回の答え2"},
+    ], ensure_ascii=False)
+
+def save_learning_log(title: str, content: str) -> str:
+    """学習した内容をMarkdownファイルに保存する。
+
+    利用者が学習内容を記録・保存したいときに使う。
+    title は記録のタイトル、content は学習内容。
+    保存前には必ず利用者の承認を得る。
+    """
+    log_dir = Path(__file__).resolve().parent.parent / "learning_log"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    # ファイル名は固定し、毎回新しい記録を追加する
+    path = log_dir / "learning_log.md"
+
+    with path.open("a", encoding="utf-8") as f:
+        f.write(f"## {title}\n\n{content}\n\n---\n\n")
+
+    return f"学習記録を {path} に保存しました。"
