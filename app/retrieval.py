@@ -153,6 +153,11 @@ def search_graph(query: str) -> dict:
 
     seeds = [hit for hit in search(query) if hit["page_id"] in pages][:min(GRAPH_START_K, GRAPH_MAX_RESULTS)]
     seed_ids = {seed["page_id"] for seed in seeds}
+    query_terms = [
+    word.casefold()
+    for word in query.split()
+    if len(word) >= 2
+]
     results, candidates = [], {}
     for rank, seed in enumerate(seeds):
         root = seed["page_id"]
@@ -175,7 +180,25 @@ def search_graph(query: str) -> dict:
                 if neighbor not in pages or neighbor in seed_ids:
                     continue
                 frequency = max((len(adjacent[n]) for n in route if nodes[n]["kind"] == "term"), default=0)
-                priority = (len(route) - 1, frequency, rank, neighbor)
+
+                page_text = (
+                            pages[neighbor]["title"] + " " +
+                            pages[neighbor]["content"]
+                            ).casefold()
+
+                matches = sum(
+                            word in page_text
+                            for word in query_terms
+                            )
+
+                priority = (
+                            len(route) - 1,
+                            -matches,
+                            frequency,
+                            rank,
+                            neighbor,
+                            )
+
                 candidate = {**pages[neighbor], "hops": len(route) - 1,
                              "path": [{"id": n, "title": nodes[n]["title"]} for n in route]}
                 if neighbor not in candidates or priority < candidates[neighbor][0]:
